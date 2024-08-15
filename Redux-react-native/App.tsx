@@ -1,20 +1,24 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// App.tsx
+import React, { useEffect } from 'react';
+import { Provider, useDispatch } from 'react-redux';
+import store, { loadCart } from './src/store/store';
+import ShoppingScreen from './src/screens/shopping-screen';
+
+const AppInitializer: React.FC = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(loadCart() as any); // Cast to any to bypass TypeScript error
+  }, [dispatch]);
+
+  return null; // This component does nothing but dispatches the async thunk
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <AppInitializer />
+      <ShoppingScreen />
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
