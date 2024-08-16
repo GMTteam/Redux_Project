@@ -1,9 +1,7 @@
-// src/store/store.ts
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
-// Định nghĩa Product và CartState như đã nêu
 interface Product {
   id: number;
   title: string;
@@ -51,11 +49,13 @@ const cartSlice = createSlice({
       } else {
         state[product.id] = { ...product, quantity: 1 };
       }
+      saveCartToStorage(state);
     },
     incrementQuantity: (state, action: PayloadAction<number>) => {
       const productId = action.payload;
       if (state[productId]) {
         state[productId].quantity! += 1;
+        saveCartToStorage(state);
       }
     },
     decrementQuantity: (state, action: PayloadAction<number>) => {
@@ -66,19 +66,32 @@ const cartSlice = createSlice({
         } else {
           delete state[productId];
         }
+        saveCartToStorage(state);
       }
+    },
+    setCart: (state, action: PayloadAction<CartState>) => {
+      return action.payload;
     },
   },
 });
 
-export const loadCart = createAsyncThunk('cart/loadCart', loadCartFromStorage);
+// Thunk để tải giỏ hàng khi ứng dụng khởi động
+export const loadCart = createAsyncThunk('cart/loadCart', async (_, { dispatch }) => {
+  const cart = await loadCartFromStorage();
+  dispatch(cartSlice.actions.setCart(cart));
+});
+
 export const { addToCart, incrementQuantity, decrementQuantity } = cartSlice.actions;
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+
 const store = configureStore({
   reducer: {
     cart: cartSlice.reducer,
   },
 });
 
+// Load cart ngay khi ứng dụng khởi động
+store.dispatch(loadCart());
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 export default store;

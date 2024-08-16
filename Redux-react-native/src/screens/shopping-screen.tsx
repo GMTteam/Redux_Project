@@ -1,8 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, FlatList, TouchableOpacity, Modal, View, Image, Text, Button, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  View,
+  Image,
+  Text,
+  StyleSheet,
+  Animated,
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import ProductItem from '../components/product-item';
 import { addToCart, incrementQuantity, decrementQuantity } from '../store/store';
+
 
 interface Product {
   id: number;
@@ -18,8 +30,9 @@ const ShoppingScreen = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
 
-  const cart = useSelector((state: any) => state.cart); // Access cart from Redux store
+  const cart = useSelector((state: any) => state.cart);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -47,13 +60,28 @@ const ShoppingScreen = () => {
   const openModalAddToCart = (product: Product) => {
     setSelectedProduct(product);
     setModalVisible(true);
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeModal = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+    });
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Shopping</Text>
       </View>
+
       <FlatList
         data={products}
         keyExtractor={(item) => item.id.toString()}
@@ -66,30 +94,46 @@ const ShoppingScreen = () => {
               image={item.image}
               category={item.category}
               rating={item.rating}
-              quantity={cart[item.id]?.quantity || 0} // Pass quantity from cart
+              quantity={cart[item.id]?.quantity || 0}
               addToCart={handleAddToCart}
               incrementQuantity={handleIncrementQuantity}
               decrementQuantity={handleDecrementQuantity}
             />
           </TouchableOpacity>
         )}
+        style={{ opacity: modalVisible ? 0.5 : 1 }}
       />
 
       {selectedProduct && (
-        <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
-          <View style={{ padding: 20 }}>
-            <Image source={{ uri: selectedProduct.image }} style={{ height: 200, width: 200 }} />
-            <Text>{selectedProduct.title}</Text>
-            <Text>{selectedProduct.description}</Text>
-            <Text>${selectedProduct.price}</Text>
-            <Button
-              title="Add to Cart"
-              onPress={() => {
-                handleAddToCart(selectedProduct);
-                setModalVisible(false);
-              }}
-            />
-            <Button title="Close" onPress={() => setModalVisible(false)} />
+        <Modal
+          transparent={true}
+          visible={modalVisible}
+          animationType="none"
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <Animated.View style={[styles.modalContent, { transform: [{ scale: scaleAnim }] }]}>
+              <Image source={{ uri: selectedProduct.image }} style={styles.modalImage} resizeMode='contain'/>
+              <View style={styles.descriptionRow}>
+                <Text style={styles.descriptionLabel}>Description:</Text>
+                <Text style={styles.descriptionText}>{selectedProduct.description}</Text>
+              </View>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.addToCartButton}
+                  onPress={() => {
+                    handleAddToCart(selectedProduct);
+                    // closeModal();
+                  }}
+                >
+                  <Ionicons name="cart-outline"  style={styles.icon} />
+                  <Text style={styles.addToCartButtonText}>Add to Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
           </View>
         </Modal>
       )}
@@ -107,8 +151,77 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: 'black',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: 110,
+    height: 180,
+    marginBottom: 10,
+  },
+  descriptionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    
+  },
+  descriptionLabel: {
+    fontSize: 15,
+    color: 'black',
+  },
+  descriptionText: {
+    fontSize: 15,
+    textAlign: 'left',
+    flexShrink: 1,
+    marginLeft: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 15,
+  },
+  addToCartButton: {
+    backgroundColor: '#FF0000',
+    padding: 10,
+    borderRadius: 10,
+    width: '55%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    marginRight: 10,
+    fontSize: 25,
+    color: "#fff",
+  },
+  addToCartButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    backgroundColor: '#bebebe',
+    borderRadius: 10,
+    width: '35%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });

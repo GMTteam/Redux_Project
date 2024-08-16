@@ -55,7 +55,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
         <View style={styles.number}>
           <Text style={styles.price}>Rs. {price}</Text>
           {quantity > 0 ? (
-            <View style={styles.action}>
+             <View style={styles.action}>
               <TouchableOpacity onPress={() => decrementQuantity(productId)} style={styles.smallButton}>
                 <Text style={styles.buttonText}>-</Text>
               </TouchableOpacity>
@@ -65,9 +65,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity onPress={() => addToCart({ productId, title, price, image, category, rating })}>
-              <Text>Add to Cart</Text>
-            </TouchableOpacity>
+              <Text></Text>
           )}
         </View>
         <Text style={styles.category}>Category: {category}</Text>
@@ -79,10 +77,10 @@ const ProductItem: React.FC<ProductItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 3,
+    padding: 5,
     backgroundColor: '#fff',
     borderRadius: 15,
-    marginVertical: 10,
+    marginVertical: 6,
     elevation: 3,
     borderWidth: 2,
     borderColor: '#aaaaaa',

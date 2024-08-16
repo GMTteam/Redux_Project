@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useEffect } from 'react';
 import { Provider, useDispatch } from 'react-redux';
 import store, { loadCart } from './src/store/store';
